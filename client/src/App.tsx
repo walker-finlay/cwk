@@ -298,7 +298,7 @@ function App() {
 
     if (key === 'Backspace') {
       e.preventDefault()
-      // If current cell has a letter, delete it and stay; otherwise go to previous cell and delete that
+      // If current cell has a letter, delete it and stay; otherwise go to previous cell (reading order) and delete that
       if (grid[i]) {
         setGrid((prev) => {
           const next = [...prev]
@@ -308,15 +308,33 @@ function App() {
         return
       }
 
-      // prefer previous in same row, otherwise previous row
-      const prev = findNextInDirection(i, 'left') ?? findNextInDirection(i, 'up')
-      if (prev !== null) {
+      // prefer previous in same row
+      const leftPrev = findNextInDirection(i, 'left')
+      if (leftPrev !== null) {
         setGrid((prevg) => {
           const next = [...prevg]
-          next[prev] = ''
+          next[leftPrev] = ''
           return next
         })
-        focusIndex(prev)
+        focusIndex(leftPrev)
+        return
+      }
+
+      // otherwise find previous non-black cell in reading order (scan backwards)
+      let prevIdx: number | null = null
+      for (let idx = i - 1; idx >= 0; idx--) {
+        if (!isBlack(idx)) {
+          prevIdx = idx
+          break
+        }
+      }
+      if (prevIdx !== null) {
+        setGrid((prevg) => {
+          const next = [...prevg]
+          next[prevIdx] = ''
+          return next
+        })
+        focusIndex(prevIdx)
       }
       return
     }
@@ -449,12 +467,6 @@ function App() {
             </div>
           ))}
         </div>
-      </div>
-
-      <div className="legend">
-        <p>
-          <strong>Note:</strong> Use arrow keys to move, Backspace deletes letters, Tab moves to next word. Click a clue to focus its first cell. Use <em>Rebus</em> mode to enter multiple letters in a cell.
-        </p>
       </div>
     </div>
   )
