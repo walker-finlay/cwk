@@ -14,22 +14,35 @@ function App() {
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null)
   const [activeClueIndex, setActiveClueIndex] = useState<number | null>(null)
 
+  const [puzzleFiles, setPuzzleFiles] = useState<{ path: string; name: string; body: PuzzleBody }[]>([])
+  const [selectedPuzzlePath, setSelectedPuzzlePath] = useState<string>('')
+
   const inputRefs = useRef<Array<HTMLInputElement | null>>([])
   const clueRefs = useRef<Array<HTMLDivElement | null>>([])
 
   useEffect(() => {
-    import('../puzzles/2026-01-01.json').then((mod) => {
-      const p = ((mod as { default?: PuzzleFile }).default || mod) as PuzzleFile
-      const body = p.body && p.body[0]
-      setPuzzle(body || null)
-      if (body && body.cells) {
-        setGrid(Array(body.cells.length).fill(''))
+    // Load all puzzles in the puzzles folder using Vite's glob import
+    const modules = import.meta.glob('../puzzles/*.json', { eager: true }) as Record<string, { default?: PuzzleFile }>
+    const entries = Object.entries(modules)
+      .map(([path, mod]) => {
+        const name = path.split('/').pop()?.replace('.json', '') || path
+        const p = (mod.default || mod) as PuzzleFile
+        const body = p.body && p.body[0]
+        return body ? { path, name, body } : null
+      })
+      .filter((e): e is { path: string; name: string; body: PuzzleBody } => !!e)
+
+    setPuzzleFiles(entries)
+    if (entries.length > 0) {
+      const first = entries[0]
+      setSelectedPuzzlePath(first.path)
+      setPuzzle(first.body)
+      if (first.body && first.body.cells) {
+        setGrid(Array(first.body.cells.length).fill(''))
       }
-      if (body) {
-        setClueLists(body.clueLists || [])
-        setClues(body.clues || [])
-      }
-    })
+      setClueLists(first.body.clueLists || [])
+      setClues(first.body.clues || [])
+    }
   }, [])
 
   // make sure rebus cell font sizes are adjusted when rebus or grid change
@@ -106,6 +119,19 @@ function App() {
       }
       // Do not auto-advance into the next word — stay on last cell if at end
     }
+  }
+
+  function handlePuzzleSelect(path: string) {
+    const entry = puzzleFiles.find((p) => p.path === path)
+    if (!entry) return
+    setSelectedPuzzlePath(path)
+    const body = entry.body
+    setPuzzle(body)
+    setGrid(Array(body.cells.length).fill(''))
+    setClueLists(body.clueLists || [])
+    setClues(body.clues || [])
+    setFocusedIndex(null)
+    setActiveClueIndex(null)
   }
 
   function adjustFontSize(i: number) {
@@ -357,6 +383,15 @@ function App() {
   return (
     <div className="App">
       <div className="controls">
+        <label className="puzzleSelectLabel">
+          Puzzle:
+          <select value={selectedPuzzlePath} onChange={(e) => handlePuzzleSelect(e.target.value)}>
+            {puzzleFiles.map((p) => (
+              <option key={p.path} value={p.path}>{p.name}</option>
+            ))}
+          </select>
+        </label>
+
         <button onClick={() => setReveal((r) => !r)} className={reveal ? 'active' : ''}>{reveal ? 'Hide' : 'Reveal'}</button>
         <button onClick={() => setRebus((r) => !r)} className={rebus ? 'active rebus' : 'rebus'}>{rebus ? 'Rebus: On' : 'Rebus: Off'}</button>
       </div>

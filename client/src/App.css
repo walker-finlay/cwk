@@ -28,6 +28,24 @@
 
 .controls {
   margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.puzzleSelectLabel {
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.puzzleSelectLabel select {
+  padding: 4px 6px;
+  border-radius: 6px;
+  border: 1px solid var(--button-border);
+  background: var(--button-bg);
+  color: var(--text);
 }
 
 button {
