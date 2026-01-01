@@ -37,6 +37,31 @@ function App() {
   const [showRevealConfirm, setShowRevealConfirm] = useState(false)
   const revealConfirmBtnRef = useRef<HTMLButtonElement | null>(null)
 
+  // theme override (light / dark). Persist in localStorage and apply as data-theme on :root
+  type Theme = 'light' | 'dark'
+  const getInitialTheme = (): Theme => {
+    try {
+      const stored = localStorage.getItem('theme') as Theme | null
+      if (stored === 'light' || stored === 'dark') return stored
+    } catch (e) {
+      console.error(e);
+    }
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) return 'dark'
+    return 'light'
+  }
+  const [theme, setTheme] = useState<Theme>(getInitialTheme)
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('theme', theme)
+    } catch (e) {
+      console.error(e);
+    }
+    document.documentElement.setAttribute('data-theme', theme)
+  }, [theme])
+
+  const toggleTheme = () => setTheme((t) => (t === 'light' ? 'dark' : 'light'))
+
   const inputRefs = useRef<Array<HTMLInputElement | null>>([])
   const clueRefs = useRef<Array<HTMLDivElement | null>>([])
 
@@ -407,6 +432,15 @@ function App() {
           className={reveal ? 'active' : ''}
         >{reveal ? 'Hide' : 'Reveal'}</button>
         <button onClick={() => setRebus((r) => !r)} className={rebus ? 'active rebus' : 'rebus'}>{rebus ? 'Rebus: On' : 'Rebus: Off'}</button>
+
+        <button
+          className="theme-toggle"
+          onClick={toggleTheme}
+          aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
+          title={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
+        >
+          {theme === 'light' ? '🌞' : '🌙'}
+        </button>
       </div>
 
       <div className="puzzle-container">

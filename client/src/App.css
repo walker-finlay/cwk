@@ -287,3 +287,49 @@ button.danger {
   background: rgba(255, 80, 60, 0.12);
   border-color: rgba(255, 80, 60, 0.2);
 }
+
+/* Theme toggle button */
+.theme-toggle {
+  margin-left: 6px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--button-border);
+  background: var(--button-bg);
+  cursor: pointer;
+  font-size: 16px;
+}
+
+/* data-theme overrides to let the user force a theme */
+:root[data-theme='dark'] {
+  --bg: #242424;
+  --text: rgba(255, 255, 255, 0.87);
+  --muted: rgba(255, 255, 255, 0.7);
+
+  --cell-bg: rgba(255, 255, 255, 0.04);
+  --cell-border: rgba(255, 255, 255, 0.06);
+  --cell-black: #000000;
+
+  --button-bg: rgba(255, 255, 255, 0.04);
+  --button-border: rgba(255, 255, 255, 0.08);
+
+  --clue-border: rgba(255, 255, 255, 0.06);
+  --clue-divider: rgba(255, 255, 255, 0.06);
+  --clue-hover: rgba(255, 255, 255, 0.03);
+}
+
+:root[data-theme='light'] {
+  --bg: #ffffff;
+  --text: #213547;
+  --muted: #666666;
+
+  --cell-bg: #ffffff;
+  --cell-border: #cfcfcf;
+  --cell-black: #000000;
+
+  --button-bg: #f7f7f7;
+  --button-border: #ccc;
+
+  --clue-border: #eee;
+  --clue-divider: #f0f0f0;
+  --clue-hover: #f8f8f8;
+}
