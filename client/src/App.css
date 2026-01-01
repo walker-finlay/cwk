@@ -246,3 +246,44 @@ button.active.rebus {
   background: var(--cell-black);
   box-shadow: var(--active-cell-shadow);
 }
+
+/* Modal styles */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 9999;
+}
+
+.modal {
+  background: var(--bg);
+  color: var(--text);
+  padding: 18px;
+  border-radius: 8px;
+  width: 320px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.modal h3 {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+}
+
+.modal p {
+  margin: 0 0 12px 0;
+  color: var(--muted);
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+button.danger {
+  background: rgba(255, 80, 60, 0.12);
+  border-color: rgba(255, 80, 60, 0.2);
+}

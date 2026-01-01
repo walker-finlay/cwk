@@ -33,6 +33,10 @@ function App() {
   const [puzzleFiles,] = useState<{ path: string; name: string; body: PuzzleBody }[]>(puzzleFilesInitial)
   const [selectedPuzzlePath, setSelectedPuzzlePath] = useState<string>(firstFile?.path || '')
 
+  // reveal confirmation modal
+  const [showRevealConfirm, setShowRevealConfirm] = useState(false)
+  const revealConfirmBtnRef = useRef<HTMLButtonElement | null>(null)
+
   const inputRefs = useRef<Array<HTMLInputElement | null>>([])
   const clueRefs = useRef<Array<HTMLDivElement | null>>([])
 
@@ -66,6 +70,22 @@ function App() {
       })
     }
   }, [rebus, grid])
+
+  // Close reveal modal on Escape and focus the confirm button when opened
+  useEffect(() => {
+    if (!showRevealConfirm) return
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setShowRevealConfirm(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [showRevealConfirm])
+
+  useEffect(() => {
+    if (showRevealConfirm && revealConfirmBtnRef.current) {
+      revealConfirmBtnRef.current.focus()
+    }
+  }, [showRevealConfirm])
   if (!puzzle) return <div className="App">Loading puzzle…</div>
 
   const cells = puzzle.cells as Cell[]
@@ -401,7 +421,13 @@ function App() {
           </select>
         </label>
 
-        <button onClick={() => setReveal((r) => !r)} className={reveal ? 'active' : ''}>{reveal ? 'Hide' : 'Reveal'}</button>
+        <button
+          onClick={() => {
+            if (!reveal) setShowRevealConfirm(true)
+            else setReveal(false)
+          }}
+          className={reveal ? 'active' : ''}
+        >{reveal ? 'Hide' : 'Reveal'}</button>
         <button onClick={() => setRebus((r) => !r)} className={rebus ? 'active rebus' : 'rebus'}>{rebus ? 'Rebus: On' : 'Rebus: Off'}</button>
       </div>
 
@@ -468,6 +494,23 @@ function App() {
           ))}
         </div>
       </div>
+
+      {showRevealConfirm && (
+        <div className="modalOverlay" onMouseDown={(e) => { if (e.target === e.currentTarget) setShowRevealConfirm(false) }}>
+          <div className="modal" role="dialog" aria-modal="true" aria-labelledby="reveal-title">
+            <h3 id="reveal-title">Reveal answers?</h3>
+            <p>Revealing will show all answers. Are you sure you want to reveal the puzzle?</p>
+            <div className="modalActions">
+              <button
+                ref={(el) => { revealConfirmBtnRef.current = el }}
+                className="danger"
+                onClick={() => { setReveal(true); setShowRevealConfirm(false) }}
+              >Reveal</button>
+              <button onClick={() => setShowRevealConfirm(false)}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
