@@ -1,13 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react'
 import './App.css'
+import type { PuzzleBody, Clue, ClueList, Cell, ClueTextPart, PuzzleFile } from './types'
 
 function App() {
-  const [puzzle, setPuzzle] = useState<any | null>(null)
+  const [puzzle, setPuzzle] = useState<PuzzleBody | null>(null)
   const [grid, setGrid] = useState<string[]>([])
   const [reveal, setReveal] = useState(false)
 
-  const [clueLists, setClueLists] = useState<any[]>([])
-  const [clues, setClues] = useState<any[]>([])
+  const [clueLists, setClueLists] = useState<ClueList[]>([])
+  const [clues, setClues] = useState<Clue[]>([])
 
   const [rebus, setRebus] = useState(false)
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null)
@@ -18,9 +19,9 @@ function App() {
 
   useEffect(() => {
     import('../puzzles/2026-01-01.json').then((mod) => {
-      const p = (mod as any).default || mod
+      const p = ((mod as { default?: PuzzleFile }).default || mod) as PuzzleFile
       const body = p.body && p.body[0]
-      setPuzzle(body)
+      setPuzzle(body || null)
       if (body && body.cells) {
         setGrid(Array(body.cells.length).fill(''))
       }
@@ -33,8 +34,27 @@ function App() {
 
   // make sure rebus cell font sizes are adjusted when rebus or grid change
   useEffect(() => {
+    function adjustFontSizeLocal(i: number) {
+      const el = inputRefs.current[i]
+      if (!el) return
+      const val = grid[i] || ''
+      const len = val.length
+      if (!rebus) {
+        el.style.fontSize = ''
+        return
+      }
+      // base size for one character
+      let size = 18
+      if (len <= 1) size = 18
+      else {
+        // decrease font by ~2px per extra char, clamp to 10px
+        size = Math.max(10, Math.floor(18 - (len - 1) * 2))
+      }
+      el.style.fontSize = `${size}px`
+    }
+
     if (rebus) {
-      grid.forEach((_, idx) => adjustFontSize(idx))
+      grid.forEach((_, idx) => adjustFontSizeLocal(idx))
     } else {
       grid.forEach((_, idx) => {
         const el = inputRefs.current[idx]
@@ -44,7 +64,7 @@ function App() {
   }, [rebus, grid])
   if (!puzzle) return <div className="App">Loading puzzle…</div>
 
-  const cells = puzzle.cells as any[]
+  const cells = puzzle.cells as Cell[]
   const size = Math.round(Math.sqrt(cells.length))
 
   function isBlack(i: number) {
@@ -125,6 +145,7 @@ function App() {
         clueRefs.current[final]?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
       } catch (e) {
         /* ignore */
+        console.error(e);
       }
     }
   }
@@ -176,7 +197,8 @@ function App() {
     const key = e.key
 
     // If composing (IME), don't intercept
-    if ((e.nativeEvent as any).isComposing) return
+    const ne = e.nativeEvent as unknown as { isComposing?: boolean }
+    if (ne.isComposing) return
 
     // If a single letter key was pressed, always overwrite the current cell (even if same letter)
     // but only when NOT in rebus mode
@@ -317,15 +339,17 @@ function App() {
     if (!clue || !clue.cells || clue.cells.length === 0) return
     // scroll the clicked clue into view
     if (clueRefs.current && clueRefs.current[clueIndex]) {
-      try { clueRefs.current[clueIndex]?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }) } catch (e) { }
+      try { clueRefs.current[clueIndex]?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }) } catch (e) {
+        console.error(e);
+      }
     }
     const first = clue.cells[0]
     focusIndex(first)
   }
 
-  function renderClueText(clue: any) {
+  function renderClueText(clue?: Clue) {
     if (!clue || !clue.text) return ''
-    return clue.text.map((t: any) => t.plain || t.formatted || '').join(' ')
+    return clue.text.map((t: ClueTextPart) => t.plain || t.formatted || '').join(' ')
   }
 
   const activeCells = activeClueIndex !== null && clues[activeClueIndex] ? new Set(clues[activeClueIndex].cells) : new Set<number>()
@@ -352,7 +376,9 @@ function App() {
                 {!isBlk && cell.label && <div className="label">{cell.label}</div>}
                 {!isBlk && (
                   <input
-                    ref={(el) => (inputRefs.current[i] = el)}
+                    ref={(el) => {
+                      inputRefs.current[i] = el
+                    }}
                     value={reveal ? (cell.answer || '') : grid[i] || ''}
                     onChange={(e) => handleChange(i, e.target.value)}
                     onFocus={() => focusIndex(i)}
@@ -368,7 +394,7 @@ function App() {
         </div>
 
         <div className="clues">
-          {clueLists.map((list: any, idx: number) => (
+          {clueLists.map((list: ClueList, idx: number) => (
             <div key={idx} className="clueList">
               <h3>{list.name}</h3>
               <div>
@@ -379,7 +405,9 @@ function App() {
                   return (
                     <div
                       key={clueIndex}
-                      ref={(el) => (clueRefs.current[clueIndex] = el)}
+                      ref={(el) => {
+                        clueRefs.current[clueIndex] = el
+                      }}
                       className={`clue ${isActiveClue ? 'active' : ''}`}
                       onClick={() => focusClue(clueIndex)}
                       onKeyDown={(e) => (e.key === 'Enter' ? focusClue(clueIndex) : undefined)}
