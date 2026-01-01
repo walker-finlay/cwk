@@ -1,42 +1,203 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+:root {
+  --cell-size: 36px;
+
+  /* color tokens (will be overridden by prefers-color-scheme media queries) */
+  --bg: #ffffff;
+  --text: #213547;
+  --muted: #666666;
+
+  --cell-bg: #ffffff;
+  --cell-border: #cfcfcf;
+  --cell-black: #000000;
+
+  --button-bg: #f7f7f7;
+  --button-border: #ccc;
+
+  --clue-border: #eee;
+  --clue-divider: #f0f0f0;
+  --clue-hover: #f8f8f8;
+
+  --active-bg: rgba(100, 120, 255, 0.08);
+  --active-cell-shadow: inset 0 0 0 2px rgba(100, 120, 255, 0.12);
+}
+
+.App {
+  padding: 20px;
+  color: var(--text);
+}
+
+.controls {
+  margin-top: 8px;
+}
+
+button {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--button-border);
+  background: var(--button-bg);
+  cursor: pointer;
+  color: var(--text);
+}
+
+/* media queries below will override the variables for each theme */
+
+.puzzle-container {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  margin-top: 12px;
+}
+
+.crossword {
+  display: grid;
+  gap: 2px;
+}
+
+.cell {
+  width: var(--cell-size);
+  height: var(--cell-size);
+  border: 1px solid var(--cell-border);
+  background: var(--cell-bg);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cell.black {
+  background: var(--cell-black);
+  border-color: var(--cell-black);
+}
+
+.cell .label {
+  position: absolute;
+  top: 2px;
+  left: 4px;
+  font-size: 10px;
+  color: var(--muted);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #242424;
+    --text: rgba(255, 255, 255, 0.87);
+    --muted: rgba(255, 255, 255, 0.7);
+
+    --cell-bg: rgba(255, 255, 255, 0.04);
+    --cell-border: rgba(255, 255, 255, 0.06);
+    --cell-black: #000000;
+
+    --button-bg: rgba(255, 255, 255, 0.04);
+    --button-border: rgba(255, 255, 255, 0.08);
+
+    --clue-border: rgba(255, 255, 255, 0.06);
+    --clue-divider: rgba(255, 255, 255, 0.06);
+    --clue-hover: rgba(255, 255, 255, 0.03);
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #ffffff;
+    --text: #213547;
+    --muted: #666666;
+
+    --cell-bg: #ffffff;
+    --cell-border: #cfcfcf;
+    --cell-black: #000000;
+
+    --button-bg: #f7f7f7;
+    --button-border: #ccc;
+
+    --clue-border: #eee;
+    --clue-divider: #f0f0f0;
+    --clue-hover: #f8f8f8;
+  }
+}
+
+.cell input {
+  width: 100%;
+  height: 100%;
+  border: 0;
   text-align: center;
+  font-weight: 700;
+  font-size: 18px;
+  outline: none;
+  background: transparent;
+  color: inherit;
+  /* hide blinking caret since the cell itself is highlighted */
+  caret-color: transparent;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+/* keep selection visible for accessibility */
+.cell input::selection {
+  background: rgba(100, 120, 255, 0.12);
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.clues {
+  width: 360px;
+  max-height: 66vh;
+  overflow: auto;
+  border-left: 1px solid var(--clue-border);
+  padding-left: 12px;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.clue {
+  padding: 8px 6px;
+  border-bottom: 1px solid var(--clue-divider);
+  cursor: pointer;
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
 }
 
-.card {
-  padding: 2em;
+.clue:hover {
+  background: var(--clue-hover);
 }
 
-.read-the-docs {
-  color: #888;
+.clueList h3 {
+  margin: 8px 0;
+  font-size: 16px;
+}
+
+.clue {
+  padding: 8px 6px;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.clue:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.clueLabel {
+  font-weight: 700;
+  min-width: 28px;
+  color: inherit;
+}
+
+.clueText {
+  color: inherit;
+}
+
+.clue.active {
+  background: var(--active-bg);
+}
+
+.cell.active {
+  box-shadow: var(--active-cell-shadow);
+}
+
+.cell.selected {
+  background: rgba(100, 120, 255, 0.15);
+  box-shadow: inset 0 0 0 2px rgba(100, 120, 255, 0.25);
+}
+
+.cell.selected.cell.black {
+  /* keep black blocks black */
+  background: var(--cell-black);
+  box-shadow: var(--active-cell-shadow);
 }
