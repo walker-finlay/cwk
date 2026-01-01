@@ -9,6 +9,7 @@ function App() {
   const [clueLists, setClueLists] = useState<any[]>([])
   const [clues, setClues] = useState<any[]>([])
 
+  const [rebus, setRebus] = useState(false)
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null)
   const [activeClueIndex, setActiveClueIndex] = useState<number | null>(null)
 
@@ -30,6 +31,17 @@ function App() {
     })
   }, [])
 
+  // make sure rebus cell font sizes are adjusted when rebus or grid change
+  useEffect(() => {
+    if (rebus) {
+      grid.forEach((_, idx) => adjustFontSize(idx))
+    } else {
+      grid.forEach((_, idx) => {
+        const el = inputRefs.current[idx]
+        if (el) el.style.fontSize = ''
+      })
+    }
+  }, [rebus, grid])
   if (!puzzle) return <div className="App">Loading puzzle…</div>
 
   const cells = puzzle.cells as any[]
@@ -41,12 +53,24 @@ function App() {
   }
 
   function handleChange(i: number, val: string) {
-    val = val.toUpperCase().slice(0, 1)
+    if (rebus) {
+      // allow multi-character entries, uppercase all, limit to 10 chars
+      val = (val || '').toUpperCase().slice(0, 10)
+    } else {
+      val = (val || '').toUpperCase().slice(0, 1)
+    }
+
     setGrid((prev) => {
       const next = [...prev]
       next[i] = val
       return next
     })
+
+    if (rebus) {
+      // adjust font size so the entry fits the cell
+      setTimeout(() => adjustFontSize(i), 0)
+      return // do not auto-advance in rebus mode
+    }
 
     // auto-advance when typing a letter, but only within the current clue
     if (val) {
@@ -62,6 +86,25 @@ function App() {
       }
       // Do not auto-advance into the next word — stay on last cell if at end
     }
+  }
+
+  function adjustFontSize(i: number) {
+    const el = inputRefs.current[i]
+    if (!el) return
+    const val = grid[i] || ''
+    const len = val.length
+    if (!rebus) {
+      el.style.fontSize = ''
+      return
+    }
+    // base size for one character
+    let size = 18
+    if (len <= 1) size = 18
+    else {
+      // decrease font by ~2px per extra char, clamp to 10px
+      size = Math.max(10, Math.floor(18 - (len - 1) * 2))
+    }
+    el.style.fontSize = `${size}px`
   }
 
   function setActiveClueByCell(i: number, preferDirection?: 'Across' | 'Down') {
@@ -136,7 +179,9 @@ function App() {
     if ((e.nativeEvent as any).isComposing) return
 
     // If a single letter key was pressed, always overwrite the current cell (even if same letter)
+    // but only when NOT in rebus mode
     if (
+      !rebus &&
       key.length === 1 &&
       /^[a-zA-Z]$/.test(key) &&
       !e.ctrlKey &&
@@ -288,7 +333,8 @@ function App() {
   return (
     <div className="App">
       <div className="controls">
-        <button onClick={() => setReveal((r) => !r)}>{reveal ? 'Hide' : 'Reveal'}</button>
+        <button onClick={() => setReveal((r) => !r)} className={reveal ? 'active' : ''}>{reveal ? 'Hide' : 'Reveal'}</button>
+        <button onClick={() => setRebus((r) => !r)} className={rebus ? 'active rebus' : 'rebus'}>{rebus ? 'Rebus: On' : 'Rebus: Off'}</button>
       </div>
 
       <div className="puzzle-container">
@@ -311,8 +357,9 @@ function App() {
                     onChange={(e) => handleChange(i, e.target.value)}
                     onFocus={() => focusIndex(i)}
                     onKeyDown={(e) => handleKeyDown(i, e)}
-                    maxLength={1}
+                    maxLength={rebus ? 10 : 1}
                     aria-label={`Cell ${i + 1}`}
+                    className={rebus ? 'rebus-input' : 'hide-caret'}
                   />
                 )}
               </div>
@@ -352,7 +399,7 @@ function App() {
 
       <div className="legend">
         <p>
-          <strong>Note:</strong> Use arrow keys to move, Backspace to jump back when empty. Click a clue to focus its first cell. Tab moves to the next word.
+          <strong>Note:</strong> Use arrow keys to move, Backspace deletes letters, Tab moves to next word. Click a clue to focus its first cell. Use <em>Rebus</em> mode to enter multiple letters in a cell.
         </p>
       </div>
     </div>

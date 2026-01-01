@@ -39,6 +39,14 @@ button {
   color: var(--text);
 }
 
+button.rebus {
+  margin-left: 8px;
+}
+
+button.active.rebus {
+  background: rgba(255, 200, 80, 0.12);
+}
+
 /* media queries below will override the variables for each theme */
 
 .puzzle-container {
@@ -125,8 +133,18 @@ button {
   outline: none;
   background: transparent;
   color: inherit;
-  /* hide blinking caret since the cell itself is highlighted */
+}
+
+/* hide blinking caret when the input has the hide-caret class */
+.cell input.hide-caret {
   caret-color: transparent;
+}
+
+/* rebus inputs: smaller default font; JS will fine-tune size to fit */
+.cell input.rebus-input {
+  font-size: 14px;
+  letter-spacing: -0.5px;
+  padding: 2px 4px;
 }
 
 /* keep selection visible for accessibility */
