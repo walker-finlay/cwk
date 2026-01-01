@@ -252,67 +252,48 @@ function App() {
       return
     }
 
-    // Helper: check if current active clue matches desired direction and contains i
-    function isActiveDirection(dir: 'Across' | 'Down') {
+    const isActiveDirectionForCell = (idx: number, dir: 'Across' | 'Down') => {
       if (activeClueIndex === null) return false
       const c = clues[activeClueIndex]
-      return !!(c && c.direction === dir && c.cells && c.cells.includes(i))
+      return !!(c && c.direction === dir && c.cells && c.cells.includes(idx))
+    }
+
+    const getCurrentClueIndexForCell = (idx: number) => {
+      if (activeClueIndex !== null) return activeClueIndex
+      const found = clues.findIndex((c) => c.cells && c.cells.includes(idx))
+      return found === -1 ? null : found
+    }
+
+    const arrowHandler = (dir: 'left' | 'right' | 'up' | 'down', clueDir: 'Across' | 'Down') => {
+      e.preventDefault()
+      if (!isActiveDirectionForCell(i, clueDir)) {
+        setActiveClueByCell(i, clueDir)
+        return
+      }
+      const nx = findNextInDirection(i, dir)
+      if (nx !== null) {
+        focusIndex(nx)
+        setActiveClueByCell(nx, clueDir)
+      }
     }
 
     if (key === 'ArrowLeft') {
-      e.preventDefault()
-      // First press should set Across without moving
-      if (!isActiveDirection('Across')) {
-        setActiveClueByCell(i, 'Across')
-        return
-      }
-      const nx = findNextInDirection(i, 'left')
-      if (nx !== null) {
-        focusIndex(nx)
-        setActiveClueByCell(nx, 'Across')
-      }
+      arrowHandler('left', 'Across')
       return
     }
 
     if (key === 'ArrowRight') {
-      e.preventDefault()
-      if (!isActiveDirection('Across')) {
-        setActiveClueByCell(i, 'Across')
-        return
-      }
-      const nx = findNextInDirection(i, 'right')
-      if (nx !== null) {
-        focusIndex(nx)
-        setActiveClueByCell(nx, 'Across')
-      }
+      arrowHandler('right', 'Across')
       return
     }
 
     if (key === 'ArrowUp') {
-      e.preventDefault()
-      if (!isActiveDirection('Down')) {
-        setActiveClueByCell(i, 'Down')
-        return
-      }
-      const nx = findNextInDirection(i, 'up')
-      if (nx !== null) {
-        focusIndex(nx)
-        setActiveClueByCell(nx, 'Down')
-      }
+      arrowHandler('up', 'Down')
       return
     }
 
     if (key === 'ArrowDown') {
-      e.preventDefault()
-      if (!isActiveDirection('Down')) {
-        setActiveClueByCell(i, 'Down')
-        return
-      }
-      const nx = findNextInDirection(i, 'down')
-      if (nx !== null) {
-        focusIndex(nx)
-        setActiveClueByCell(nx, 'Down')
-      }
+      arrowHandler('down', 'Down')
       return
     }
 
@@ -362,10 +343,7 @@ function App() {
     if (key === 'Tab') {
       e.preventDefault()
       // Move to next word (clue). Shift+Tab moves to previous
-      const currentClue = activeClueIndex !== null ? activeClueIndex : (() => {
-        const found = clues.findIndex((c) => c.cells && c.cells.includes(i))
-        return found === -1 ? null : found
-      })()
+      const currentClue = getCurrentClueIndexForCell(i)
 
       if (currentClue === null) return
 
