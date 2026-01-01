@@ -3,25 +3,7 @@ import './App.css'
 import type { PuzzleBody, Clue, ClueList, Cell, ClueTextPart, PuzzleFile } from './types'
 
 function App() {
-  const [puzzle, setPuzzle] = useState<PuzzleBody | null>(null)
-  const [grid, setGrid] = useState<string[]>([])
-  const [reveal, setReveal] = useState(false)
-
-  const [clueLists, setClueLists] = useState<ClueList[]>([])
-  const [clues, setClues] = useState<Clue[]>([])
-
-  const [rebus, setRebus] = useState(false)
-  const [focusedIndex, setFocusedIndex] = useState<number | null>(null)
-  const [activeClueIndex, setActiveClueIndex] = useState<number | null>(null)
-
-  const [puzzleFiles, setPuzzleFiles] = useState<{ path: string; name: string; body: PuzzleBody }[]>([])
-  const [selectedPuzzlePath, setSelectedPuzzlePath] = useState<string>('')
-
-  const inputRefs = useRef<Array<HTMLInputElement | null>>([])
-  const clueRefs = useRef<Array<HTMLDivElement | null>>([])
-
-  useEffect(() => {
-    // Load all puzzles in the puzzles folder using Vite's glob import
+  const initializeState = () => {
     const modules = import.meta.glob('../puzzles/*.json', { eager: true }) as Record<string, { default?: PuzzleFile }>
     const entries = Object.entries(modules)
       .map(([path, mod]) => {
@@ -31,19 +13,28 @@ function App() {
         return body ? { path, name, body } : null
       })
       .filter((e): e is { path: string; name: string; body: PuzzleBody } => !!e)
+    return entries
+  }
 
-    setPuzzleFiles(entries)
-    if (entries.length > 0) {
-      const first = entries[0]
-      setSelectedPuzzlePath(first.path)
-      setPuzzle(first.body)
-      if (first.body && first.body.cells) {
-        setGrid(Array(first.body.cells.length).fill(''))
-      }
-      setClueLists(first.body.clueLists || [])
-      setClues(first.body.clues || [])
-    }
-  }, [])
+  const puzzleFilesInitial = initializeState()
+  const firstFile = puzzleFilesInitial.length > 0 ? puzzleFilesInitial[0] : null
+
+  const [puzzle, setPuzzle] = useState<PuzzleBody | null>(firstFile?.body || null)
+  const [grid, setGrid] = useState<string[]>(firstFile?.body?.cells ? Array(firstFile.body.cells.length).fill('') : [])
+  const [reveal, setReveal] = useState(false)
+
+  const [clueLists, setClueLists] = useState<ClueList[]>(firstFile?.body?.clueLists || [])
+  const [clues, setClues] = useState<Clue[]>(firstFile?.body?.clues || [])
+
+  const [rebus, setRebus] = useState(false)
+  const [focusedIndex, setFocusedIndex] = useState<number | null>(null)
+  const [activeClueIndex, setActiveClueIndex] = useState<number | null>(null)
+
+  const [puzzleFiles,] = useState<{ path: string; name: string; body: PuzzleBody }[]>(puzzleFilesInitial)
+  const [selectedPuzzlePath, setSelectedPuzzlePath] = useState<string>(firstFile?.path || '')
+
+  const inputRefs = useRef<Array<HTMLInputElement | null>>([])
+  const clueRefs = useRef<Array<HTMLDivElement | null>>([])
 
   // make sure rebus cell font sizes are adjusted when rebus or grid change
   useEffect(() => {
