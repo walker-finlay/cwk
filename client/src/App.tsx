@@ -4,6 +4,8 @@ import type { PuzzleBody, Clue, ClueList, Cell, ClueTextPart, PuzzleFile } from 
 import { getDay } from 'date-fns'
 
 function App() {
+  // Track current direction (Across/Down)
+  const [direction, setDirection] = useState<'Across' | 'Down' | null>(null)
   const initializeState = () => {
     const modules = import.meta.glob('../puzzles/*.json', { eager: true }) as Record<string, { default?: PuzzleFile }>
     const entries = Object.entries(modules)
@@ -194,12 +196,14 @@ function App() {
   function setActiveClueByCell(i: number, preferDirection?: 'Across' | 'Down') {
     if (!clues || clues.length === 0) return
     const isDown = preferDirection === 'Down'
-    setActiveClueIndex(cells[i].clues[+isDown])
+    const clueIdx = cells[i].clues[+isDown]
+    setActiveClueIndex(clueIdx)
+    setDirection(clueIdx !== null && clueIdx !== undefined ? clues[clueIdx]?.direction ?? null : null)
 
     // scroll the clue into view if possible
-    if (cells[i].clues[+isDown] !== null && clueRefs.current && clueRefs.current[cells[i].clues[+isDown]]) {
+    if (clueIdx !== null && clueIdx !== undefined && clueRefs.current && clueRefs.current[clueIdx]) {
       try {
-        clueRefs.current[cells[i].clues[+isDown]]?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+        clueRefs.current[clueIdx]?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
       } catch (e) {
         /* ignore */
         console.error(e);
@@ -382,25 +386,51 @@ function App() {
 
     if (key === 'Tab') {
       e.preventDefault()
-      // Move to next word (clue). Shift+Tab moves to previous
-      const currentClue = getCurrentClueIndexForCell(i)
-
-      if (currentClue === null) return
-
-      // find which clueList contains this clue
-      const listIdx = clueLists.findIndex((l) => l.clues && l.clues.includes(currentClue))
-      if (listIdx === -1) return
-      const list = clueLists[listIdx]
-      const pos = list.clues.indexOf(currentClue)
-      let targetClueIndex: number | null = null
-      if (!e.shiftKey) {
-        targetClueIndex = list.clues[pos + 1] ?? null
+      if (!clues || activeClueIndex === null) return
+      // Use direction state to determine which clue list to advance
+      const dir = direction || clues[activeClueIndex].direction
+      let targetIdx = -1;
+      if (e.shiftKey) {
+        // Find previous clue in the same direction
+        for (let idx = activeClueIndex - 1; idx >= 0; idx--) {
+          if (clues[idx].direction === dir) {
+            targetIdx = idx;
+            break;
+          }
+        }
+        if (targetIdx === -1) {
+          // wrap around to last in direction
+          for (let idx = clues.length - 1; idx > activeClueIndex; idx--) {
+            if (clues[idx].direction === dir) {
+              targetIdx = idx;
+              break;
+            }
+          }
+        }
       } else {
-        targetClueIndex = list.clues[pos - 1] ?? null
+        // Find next clue in the same direction
+        for (let idx = activeClueIndex + 1; idx < clues.length; idx++) {
+          if (clues[idx].direction === dir) {
+            targetIdx = idx;
+            break;
+          }
+        }
+        if (targetIdx === -1) {
+          // wrap around to first in direction
+          for (let idx = 0; idx < activeClueIndex; idx++) {
+            if (clues[idx].direction === dir) {
+              targetIdx = idx;
+              break;
+            }
+          }
+        }
       }
-
-      if (targetClueIndex === null) return
-      focusClue(targetClueIndex)
+      if (targetIdx !== -1) {
+        setActiveClueIndex(targetIdx)
+        setDirection(dir)
+        const firstCell = clues[targetIdx].cells?.[0]
+        if (firstCell !== undefined) setFocusedIndex(firstCell)
+      }
       return
     }
 
