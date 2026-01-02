@@ -20,7 +20,7 @@ export interface ClueList {
 
 export interface Cell {
   answer?: string
-  clues?: number[]
+  clues: number[]
   label?: string
   type?: number
 }

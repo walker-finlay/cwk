@@ -193,20 +193,13 @@ function App() {
 
   function setActiveClueByCell(i: number, preferDirection?: 'Across' | 'Down') {
     if (!clues || clues.length === 0) return
-    let found = -1
-    if (preferDirection) {
-      found = clues.findIndex((c) => c.direction === preferDirection && c.cells && c.cells.includes(i))
-    }
-    if (found === -1) {
-      found = clues.findIndex((c) => c.cells && c.cells.includes(i))
-    }
-    const final = found === -1 ? null : found
-    setActiveClueIndex(final)
+    const isDown = preferDirection === 'Down'
+    setActiveClueIndex(cells[i].clues[+isDown])
 
     // scroll the clue into view if possible
-    if (final !== null && clueRefs.current && clueRefs.current[final]) {
+    if (cells[i].clues[+isDown] !== null && clueRefs.current && clueRefs.current[cells[i].clues[+isDown]]) {
       try {
-        clueRefs.current[final]?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+        clueRefs.current[cells[i].clues[+isDown]]?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
       } catch (e) {
         /* ignore */
         console.error(e);
