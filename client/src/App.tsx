@@ -150,7 +150,8 @@ function App() {
         const pos = seq.indexOf(i)
         // only advance if we're inside the clue and not at the final cell
         if (pos >= 0 && pos < seq.length - 1) {
-          focusIndex(seq[pos + 1])
+          // preserve the current clue direction when moving to next cell
+          focusIndex(seq[pos + 1], currentClue.direction as 'Across' | 'Down')
           return
         }
       }
@@ -325,7 +326,7 @@ function App() {
 
     if (key === 'Backspace') {
       e.preventDefault()
-      // If current cell has a letter, delete it and stay; otherwise go to previous cell (reading order) and delete that
+      // If current cell has a letter, delete it and stay
       if (grid[i]) {
         setGrid((prev) => {
           const next = [...prev]
@@ -335,7 +336,24 @@ function App() {
         return
       }
 
-      // prefer previous in same row
+      // If we're inside the active clue, prefer the previous cell in that clue (works for Across or Down)
+      const currentClue = activeClueIndex !== null ? clues[activeClueIndex] : null
+      if (currentClue && currentClue.cells && currentClue.cells.includes(i)) {
+        const seq = currentClue.cells
+        const pos = seq.indexOf(i)
+        if (pos > 0) {
+          const prevCell = seq[pos - 1]
+          setGrid((prevg) => {
+            const next = [...prevg]
+            next[prevCell] = ''
+            return next
+          })
+          focusIndex(prevCell, currentClue.direction as 'Across' | 'Down')
+          return
+        }
+      }
+
+      // otherwise prefer previous in same row (left)
       const leftPrev = findNextInDirection(i, 'left')
       if (leftPrev !== null) {
         setGrid((prevg) => {
