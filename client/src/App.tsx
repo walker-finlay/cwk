@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import './App.css'
 import type { PuzzleBody, Clue, ClueList, Cell, ClueTextPart, PuzzleFile } from './types'
+import { getDay } from 'date-fns'
 
 function App() {
   const initializeState = () => {
@@ -244,7 +245,7 @@ function App() {
     return null
   }
 
-  function focusIndex(idx: number | null) {
+  function focusIndex(idx: number | null, preferDirection?: 'Across' | 'Down') {
     setFocusedIndex(idx)
     if (idx === null) return
     const el = inputRefs.current[idx]
@@ -252,7 +253,7 @@ function App() {
       el.focus()
       el.select()
     }
-    setActiveClueByCell(idx)
+    setActiveClueByCell(idx, preferDirection)
   }
 
   function handleKeyDown(i: number, e: React.KeyboardEvent<HTMLInputElement>) {
@@ -412,6 +413,8 @@ function App() {
 
   const activeCells = activeClueIndex !== null && clues[activeClueIndex] ? new Set(clues[activeClueIndex].cells) : new Set<number>()
 
+  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
   return (
     <div className="App">
       <div className="controls">
@@ -419,7 +422,7 @@ function App() {
           Puzzle:
           <select value={selectedPuzzlePath} onChange={(e) => handlePuzzleSelect(e.target.value)}>
             {puzzleFiles.map((p) => (
-              <option key={p.path} value={p.path}>{p.name}</option>
+              <option key={p.path} value={p.path}>{p.name + ` (${dayNames[getDay(p.name) + 1]})`}</option>
             ))}
           </select>
         </label>
@@ -454,7 +457,16 @@ function App() {
             const isActive = activeCells.has(i)
             const isSelected = focusedIndex === i
             return (
-              <div key={i} className={`cell ${isBlk ? 'black' : ''} ${isActive ? 'active' : ''} ${isSelected ? 'selected' : ''}`} role="gridcell">
+              <div
+                key={i}
+                className={`cell ${isBlk ? 'black' : ''} ${isActive ? 'active' : ''} ${isSelected ? 'selected' : ''}`}
+                role="gridcell"
+                onClick={() => {
+                  const dir = activeClueIndex !== null ? clues[activeClueIndex]?.direction : undefined
+                  const prefer = dir === 'Across' || dir === 'Down' ? (dir as 'Across' | 'Down') : undefined
+                  focusIndex(i, prefer)
+                }}
+              >
                 {!isBlk && cell.label && <div className="label">{cell.label}</div>}
                 {!isBlk && (
                   <input
@@ -463,7 +475,11 @@ function App() {
                     }}
                     value={reveal ? (cell.answer || '') : grid[i] || ''}
                     onChange={(e) => handleChange(i, e.target.value)}
-                    onFocus={() => focusIndex(i)}
+                    onFocus={() => {
+                      const dir = activeClueIndex !== null ? clues[activeClueIndex]?.direction : undefined
+                      const prefer = dir === 'Across' || dir === 'Down' ? (dir as 'Across' | 'Down') : undefined
+                      focusIndex(i, prefer)
+                    }}
                     onKeyDown={(e) => handleKeyDown(i, e)}
                     maxLength={rebus ? 10 : 1}
                     aria-label={`Cell ${i + 1}`}
