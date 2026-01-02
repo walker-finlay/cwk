@@ -207,7 +207,10 @@ function App() {
     }
   }
 
-  function findNextInDirection(i: number, dir: 'left' | 'right' | 'up' | 'down') {
+  /**
+   * Find the next non-black cell in the given direction from index i
+   */
+  function findNextInDirection(i: number, dir: 'left' | 'right' | 'up' | 'down'): number | null {
     const r = Math.floor(i / size)
     const c = i % size
     if (dir === 'left') {
@@ -292,7 +295,7 @@ function App() {
       }
       const nx = findNextInDirection(i, dir)
       if (nx !== null) {
-        focusIndex(nx)
+        focusIndex(nx, clueDir)
         setActiveClueByCell(nx, clueDir)
       }
     }
