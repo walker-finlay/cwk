@@ -425,8 +425,14 @@ function App() {
       if (targetIdx !== -1) {
         setActiveClueIndex(targetIdx)
         setDirection(dir)
-        const firstCell = clues[targetIdx].cells?.[0]
-        if (firstCell !== undefined) focusIndex(firstCell, dir)
+        const clueCells = clues[targetIdx].cells || [];
+        // Find the first empty cell in the new clue
+        let emptyCell = clueCells.find(idx => !grid[idx]);
+        if (emptyCell === undefined) {
+          // If all cells are filled, fallback to first cell
+          emptyCell = clueCells[0];
+        }
+        if (emptyCell !== undefined) focusIndex(emptyCell, dir);
       }
       return
     }
