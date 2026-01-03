@@ -1,4 +1,4 @@
-export type Direction = 'Across' | 'Down' | string
+export type Direction = 'Across' | 'Down'
 
 export interface ClueTextPart {
   plain?: string
