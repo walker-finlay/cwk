@@ -150,12 +150,18 @@ function App() {
       if (currentClue && currentClue.cells) {
         const seq = currentClue.cells
         const pos = seq.indexOf(i)
-        // only advance if we're inside the clue and not at the final cell
-        if (pos >= 0 && pos < seq.length - 1) {
-          // preserve the current clue direction when moving to next cell
-          focusIndex(seq[pos + 1], currentClue.direction as 'Across' | 'Down')
-          return
+        // Find the next empty cell after the current one
+        let nextEmpty = null;
+        for (let j = pos + 1; j < seq.length; j++) {
+          if (!grid[seq[j]]) {
+            nextEmpty = seq[j];
+            break;
+          }
         }
+        if (nextEmpty !== null) {
+          focusIndex(nextEmpty, currentClue.direction as 'Across' | 'Down')
+        }
+        // If there are no empty cells ahead, stay on current cell
       }
       // Do not auto-advance into the next word — stay on last cell if at end
     }
