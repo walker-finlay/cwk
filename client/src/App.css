@@ -185,7 +185,8 @@ button.active.rebus {
   display: flex;
   gap: 8px;
   align-items: baseline;
-  scroll-margin-top: 40px; /* Prevent sticky header from covering scrolled-to clues */
+  scroll-margin-top: 40px;
+  /* Prevent sticky header from covering scrolled-to clues */
 }
 
 .clue:hover {
