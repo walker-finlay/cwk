@@ -4,6 +4,8 @@ import type { PuzzleBody, Clue, ClueList, Cell, ClueTextPart, PuzzleFile } from 
 import { getDay } from 'date-fns'
 
 function App() {
+  // Track the last selected cell index for click logic
+  const lastSelectedIndex = useRef<number | null>(null)
   // Track current direction (Across/Down)
   const [direction, setDirection] = useState<'Across' | 'Down' | null>(null)
   const initializeState = () => {
@@ -204,7 +206,9 @@ function App() {
     const isDown = preferDirection === 'Down'
     const clueIdx = cells[i].clues[+isDown]
     setActiveClueIndex(clueIdx)
-    setDirection(clueIdx !== null && clueIdx !== undefined ? clues[clueIdx]?.direction ?? null : null)
+    if (typeof preferDirection !== 'undefined') {
+      setDirection(clueIdx !== null && clueIdx !== undefined ? clues[clueIdx]?.direction ?? null : null)
+    }
 
     // scroll the clue into view if possible
     if (clueIdx !== null && clueIdx !== undefined && clueRefs.current && clueRefs.current[clueIdx]) {
@@ -253,6 +257,7 @@ function App() {
   }
 
   function focusIndex(idx: number | null, preferDirection?: 'Across' | 'Down') {
+    lastSelectedIndex.current = focusedIndex; // store previous before updating
     setFocusedIndex(idx)
     if (idx === null) return
     const el = inputRefs.current[idx]
@@ -538,9 +543,18 @@ function App() {
                 className={`cell ${isBlk ? 'black' : ''} ${isActive ? 'active' : ''} ${isSelected ? 'selected' : ''}`}
                 role="gridcell"
                 onClick={() => {
-                  const dir = activeClueIndex !== null ? clues[activeClueIndex]?.direction : undefined
-                  const prefer = dir === 'Across' || dir === 'Down' ? (dir as 'Across' | 'Down') : undefined
-                  focusIndex(i, prefer)
+                  // Use lastSelectedIndex to determine if this is a repeat click
+                  if (focusedIndex === i && lastSelectedIndex.current === i) {
+                    // Toggle direction if clicking the already selected cell again
+                    const currentDir = direction || (activeClueIndex !== null ? clues[activeClueIndex]?.direction : 'Across');
+                    const newDir = currentDir === 'Across' ? 'Down' : 'Across';
+                    setActiveClueByCell(i, newDir);
+                  } else {
+                    // Always preserve current direction when clicking a different cell
+                    const prefer = direction || (activeClueIndex !== null ? clues[activeClueIndex]?.direction : 'Across');
+                    setActiveClueByCell(i, prefer as 'Across' | 'Down');
+                    focusIndex(i, prefer as 'Across' | 'Down');
+                  }
                 }}
               >
                 {!isBlk && cell.label && <div className="label">{cell.label}</div>}
