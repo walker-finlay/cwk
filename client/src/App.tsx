@@ -279,16 +279,13 @@ function App() {
       return
     }
 
+    /**
+     * Check if the given direction is the active direction for the current cell
+     */
     const isActiveDirectionForCell = (idx: number, dir: 'Across' | 'Down') => {
       if (activeClueIndex === null) return false
-      const c = clues[activeClueIndex]
-      return !!(c && c.direction === dir && c.cells && c.cells.includes(idx))
-    }
-
-    const getCurrentClueIndexForCell = (idx: number) => {
-      if (activeClueIndex !== null) return activeClueIndex
-      const found = clues.findIndex((c) => c.cells && c.cells.includes(idx))
-      return found === -1 ? null : found
+      const activeClue = clues[activeClueIndex]
+      return !!(activeClue && activeClue.direction === dir && activeClue.cells && activeClue.cells.includes(idx))
     }
 
     const arrowHandler = (dir: 'left' | 'right' | 'up' | 'down', clueDir: 'Across' | 'Down') => {
@@ -429,7 +426,7 @@ function App() {
         setActiveClueIndex(targetIdx)
         setDirection(dir)
         const firstCell = clues[targetIdx].cells?.[0]
-        if (firstCell !== undefined) setFocusedIndex(firstCell)
+        if (firstCell !== undefined) focusIndex(firstCell, dir)
       }
       return
     }
