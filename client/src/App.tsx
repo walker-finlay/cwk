@@ -428,17 +428,40 @@ function App() {
           }
         }
       }
-      if (targetIdx !== -1) {
-        setActiveClueIndex(targetIdx)
-        setDirection(dir)
-        const clueCells = clues[targetIdx].cells || [];
-        // Find the first empty cell in the new clue
-        let emptyCell = clueCells.find(idx => !grid[idx]);
-        if (emptyCell === undefined) {
-          // If all cells are filled, fallback to first cell
-          emptyCell = clueCells[0];
+      if (clues && clues.length > 0) {
+        // Build a list of clue indices in the current direction, in navigation order
+        const indices: number[] = [];
+        if (e.shiftKey) {
+          for (let idx = activeClueIndex - 1; idx >= 0; idx--) {
+            if (clues[idx].direction === dir) indices.push(idx);
+          }
+          for (let idx = clues.length - 1; idx > activeClueIndex; idx--) {
+            if (clues[idx].direction === dir) indices.push(idx);
+          }
+        } else {
+          for (let idx = activeClueIndex + 1; idx < clues.length; idx++) {
+            if (clues[idx].direction === dir) indices.push(idx);
+          }
+          for (let idx = 0; idx < activeClueIndex; idx++) {
+            if (clues[idx].direction === dir) indices.push(idx);
+          }
         }
-        if (emptyCell !== undefined) focusIndex(emptyCell, dir);
+        // Find the first clue in indices with at least one empty cell
+        let foundIdx = indices.find(idx => (clues[idx].cells || []).some(cell => !grid[cell]));
+        if (foundIdx === undefined) {
+          // If all clues are full, fall back to the next in order (original logic)
+          foundIdx = indices[0];
+        }
+        if (foundIdx !== undefined) {
+          setActiveClueIndex(foundIdx);
+          setDirection(dir);
+          const clueCells = clues[foundIdx].cells || [];
+          let emptyCell = clueCells.find(idx => !grid[idx]);
+          if (emptyCell === undefined) {
+            emptyCell = clueCells[0];
+          }
+          if (emptyCell !== undefined) focusIndex(emptyCell, dir);
+        }
       }
       return
     }
