@@ -4,6 +4,32 @@ import type { PuzzleBody, Clue, ClueList, Cell, ClueTextPart, PuzzleFile } from 
 import { getDay } from 'date-fns'
 
 function App() {
+  // Extract circle cell indices from SVG for any puzzle
+  function getCircleCells(puzzle: PuzzleBody | null): Set<number> {
+    if (!puzzle || !puzzle.SVG) return new Set();
+    try {
+      const svg = puzzle.SVG as unknown;
+      const children1 = (svg as { children?: unknown[] })?.children;
+      const cellGroups = Array.isArray(children1) && children1[1] && (children1[1] as { children?: unknown[] }).children ? (children1[1] as { children?: unknown[] }).children : undefined;
+      if (!Array.isArray(cellGroups)) return new Set();
+      const circleIndices = new Set<number>();
+      cellGroups.forEach((cell, idx) => {
+        const children = (cell as { children?: unknown[] })?.children;
+        if (Array.isArray(children) && children.some((el) => (el as { name?: string; })?.name === 'circle')) {
+          circleIndices.add(idx);
+        }
+      });
+      return circleIndices;
+    } catch {
+      return new Set();
+    }
+  }
+
+  // circleCells must be computed after puzzle is defined
+  // circleCells must be computed after puzzle is defined
+  // Move this below puzzle definition
+  // Now puzzle is defined, compute circleCells
+  // Move this below puzzle definition
   // Track the last selected cell index for click logic
   const lastSelectedIndex = useRef<number | null>(null)
   // Track current direction (Across/Down)
@@ -25,6 +51,10 @@ function App() {
   const firstFile = puzzleFilesInitial.length > 0 ? puzzleFilesInitial[0] : null
 
   const [puzzle, setPuzzle] = useState<PuzzleBody | null>(firstFile?.body || null)
+  // Now puzzle is defined, compute circleCells
+  const circleCells = getCircleCells(firstFile?.body || null);
+  console.log(circleCells);
+
   const [grid, setGrid] = useState<string[]>(firstFile?.body?.cells ? Array(firstFile.body.cells.length).fill('') : [])
   const [reveal, setReveal] = useState(false)
 
@@ -558,6 +588,9 @@ function App() {
                 }}
               >
                 {!isBlk && cell.label && <div className="label">{cell.label}</div>}
+                {circleCells.has(i) && !isBlk && (
+                  <div className="circle-overlay" />
+                )}
                 {!isBlk && (
                   <input
                     ref={(el) => {

@@ -1,3 +1,16 @@
+/* Circle overlay for circled cells */
+.circle-overlay {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: calc(var(--cell-size) - 4px);
+  height: calc(var(--cell-size) - 4px);
+  border: 2px solid dimgray;
+  border-radius: 50%;
+  pointer-events: none;
+  box-sizing: border-box;
+}
+
 :root {
   --cell-size: 36px;
 
