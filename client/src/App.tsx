@@ -1,50 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react'
 import './App.css'
-import type { PuzzleBody, Clue, ClueList, Cell, ClueTextPart, PuzzleFile, SVGCellComponent } from './types'
+import type { PuzzleBody, Clue, ClueList, Cell, PuzzleFile } from './types'
 import { getDay } from 'date-fns'
+import { getCircleCells, getReferencedCellIndices, renderClueText } from './utils'
 
 function App() {
-  // Helper: Find referenced clues in clue text using regex
-  function getReferencedCellIndices(clue: Clue, clues: Clue[]): number[] {
-    if (!clue || !clue.text) return [];
-    // Regex: match e.g. '12-Across' or '5-Down'
-    const regex = /(\d+)-(Across|Down)/gi;
-    const text = clue.text.map((t: ClueTextPart) => t.plain || t.formatted || '').join(' ');
-    const matches = [...text.matchAll(regex)];
-    const indices: number[] = [];
-    matches.forEach(match => {
-      const num = match[1];
-      const dir = match[2];
-      // Find the clue with this label and direction
-      const refClue = clues.find(c => c.label === num && c.direction === dir);
-      if (refClue && Array.isArray(refClue.cells)) {
-        indices.push(...refClue.cells);
-      }
-    });
-    return indices;
-  }
-  // Extract circle cell indices from SVG for any puzzle
-  function getCircleCells(puzzle: PuzzleBody | null): Set<number> {
-    if (!puzzle || !puzzle.SVG) return new Set();
-    try {
-      const svg = puzzle.SVG as unknown;
-      const children1 = (svg as { children?: unknown[] })?.children;
-      const cellGroups = Array.isArray(children1) && children1[1] && (children1[1] as { children?: unknown[] }).children ? (children1[1] as { children?: unknown[] }).children : undefined;
-      if (!Array.isArray(cellGroups)) return new Set();
-      const circleIndices = new Set<number>();
-      cellGroups.forEach((cell, idx) => {
-        const children: SVGCellComponent[] = (cell as { children: SVGCellComponent[] })?.children;
-        const isCircleElement = (el: SVGCellComponent): boolean => (el)?.name === 'circle' || el?.name === 'path';
-        if (Array.isArray(children) && children.some(isCircleElement)) {
-          circleIndices.add(idx);
-        }
-      });
-      return circleIndices;
-    } catch {
-      return new Set();
-    }
-  }
-
   // circleCells must be computed after puzzle is defined
   // Move this below puzzle definition
   // Now puzzle is defined, compute circleCells
@@ -533,11 +493,6 @@ function App() {
     }
     const first = clue.cells[0]
     focusIndex(first)
-  }
-
-  function renderClueText(clue?: Clue) {
-    if (!clue || !clue.text) return ''
-    return clue.text.map((t: ClueTextPart) => t.plain || t.formatted || '').join(' ')
   }
 
   // Highlight cells for the active clue and any referenced clues
