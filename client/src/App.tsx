@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import './App.css'
-import type { PuzzleBody, Clue, ClueList, Cell, PuzzleFile } from './types'
+import type { PuzzleBody, Clue, ClueList, Cell, PuzzleFile, Direction } from './types'
 import { getDay } from 'date-fns'
 import { getCircleCells, getReferencedCellIndices, renderClueText } from './utils'
 
@@ -12,7 +12,7 @@ function App() {
   // Track the last selected cell index for click logic
   const lastSelectedIndex = useRef<number | null>(null)
   // Track current direction (Across/Down)
-  const [direction, setDirection] = useState<'Across' | 'Down' | null>(null)
+  const [direction, setDirection] = useState<Direction | null>(null)
   const initializeState = () => {
     const modules = import.meta.glob('../puzzles/*.json', { eager: true }) as Record<string, { default?: PuzzleFile }>
     const entries = Object.entries(modules)
@@ -169,7 +169,7 @@ function App() {
           }
         }
         if (nextEmpty !== null) {
-          focusIndex(nextEmpty, currentClue.direction as 'Across' | 'Down')
+          focusIndex(nextEmpty, currentClue.direction)
         }
         // If there are no empty cells ahead, stay on current cell
       }
@@ -209,7 +209,7 @@ function App() {
     el.style.fontSize = `${size}px`
   }
 
-  function setActiveClueByCell(i: number, preferDirection?: 'Across' | 'Down') {
+  function setActiveClueByCell(i: number, preferDirection?: Direction) {
     if (!clues || clues.length === 0) return
     const isDown = preferDirection === 'Down'
     const clueIdx = cells[i].clues[+isDown]
@@ -264,7 +264,7 @@ function App() {
     return null
   }
 
-  function focusIndex(idx: number | null, preferDirection?: 'Across' | 'Down') {
+  function focusIndex(idx: number | null, preferDirection?: Direction) {
     lastSelectedIndex.current = focusedIndex; // store previous before updating
     setFocusedIndex(idx)
     if (idx === null) return
@@ -301,13 +301,13 @@ function App() {
     /**
      * Check if the given direction is the active direction for the current cell
      */
-    const isActiveDirectionForCell = (idx: number, dir: 'Across' | 'Down') => {
+    const isActiveDirectionForCell = (idx: number, dir: Direction) => {
       if (activeClueIndex === null) return false
       const activeClue = clues[activeClueIndex]
       return !!(activeClue && activeClue.direction === dir && activeClue.cells && activeClue.cells.includes(idx))
     }
 
-    const arrowHandler = (dir: 'left' | 'right' | 'up' | 'down', clueDir: 'Across' | 'Down') => {
+    const arrowHandler = (dir: 'left' | 'right' | 'up' | 'down', clueDir: Direction) => {
       e.preventDefault()
       if (!isActiveDirectionForCell(i, clueDir)) {
         setActiveClueByCell(i, clueDir)
@@ -364,7 +364,7 @@ function App() {
             next[prevCell] = ''
             return next
           })
-          focusIndex(prevCell, currentClue.direction as 'Across' | 'Down')
+          focusIndex(prevCell, currentClue.direction)
           return
         }
       }
@@ -492,7 +492,7 @@ function App() {
       }
     }
     const first = clue.cells[0]
-    focusIndex(first)
+    focusIndex(first, clue.direction)
   }
 
   // Highlight cells for the active clue and any referenced clues
@@ -564,8 +564,8 @@ function App() {
                   } else {
                     // Always preserve current direction when clicking a different cell
                     const prefer = direction || (activeClueIndex !== null ? clues[activeClueIndex]?.direction : 'Across');
-                    setActiveClueByCell(i, prefer as 'Across' | 'Down');
-                    focusIndex(i, prefer as 'Across' | 'Down');
+                    setActiveClueByCell(i, prefer);
+                    focusIndex(i, prefer);
                   }
                 }}
               >
@@ -582,7 +582,7 @@ function App() {
                     onChange={(e) => handleChange(i, e.target.value)}
                     onFocus={() => {
                       const dir = activeClueIndex !== null ? clues[activeClueIndex]?.direction : undefined
-                      const prefer = dir === 'Across' || dir === 'Down' ? (dir as 'Across' | 'Down') : undefined
+                      const prefer = dir === 'Across' || dir === 'Down' ? (dir) : undefined
                       focusIndex(i, prefer)
                     }}
                     onKeyDown={(e) => handleKeyDown(i, e)}
