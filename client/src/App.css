@@ -1,3 +1,10 @@
+/* Highlight for referenced cells (not current word) */
+.cell.referenced {
+  background: rgba(255, 255, 146, 0.05);
+  /* subtle yellow highlight with opacity */
+  box-shadow: 0 0 0 2px rgba(255, 255, 157, 0.1) inset;
+}
+
 /* Circle overlay for circled cells */
 .circle-overlay {
   position: absolute;

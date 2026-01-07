@@ -4,6 +4,25 @@ import type { PuzzleBody, Clue, ClueList, Cell, ClueTextPart, PuzzleFile } from 
 import { getDay } from 'date-fns'
 
 function App() {
+  // Helper: Find referenced clues in clue text using regex
+  function getReferencedCellIndices(clue: Clue, clues: Clue[]): number[] {
+    if (!clue || !clue.text) return [];
+    // Regex: match e.g. '12-Across' or '5-Down'
+    const regex = /(\d+)-(Across|Down)/gi;
+    const text = clue.text.map((t: ClueTextPart) => t.plain || t.formatted || '').join(' ');
+    const matches = [...text.matchAll(regex)];
+    const indices: number[] = [];
+    matches.forEach(match => {
+      const num = match[1];
+      const dir = match[2];
+      // Find the clue with this label and direction
+      const refClue = clues.find(c => c.label === num && c.direction === dir);
+      if (refClue && Array.isArray(refClue.cells)) {
+        indices.push(...refClue.cells);
+      }
+    });
+    return indices;
+  }
   // Extract circle cell indices from SVG for any puzzle
   function getCircleCells(puzzle: PuzzleBody | null): Set<number> {
     if (!puzzle || !puzzle.SVG) return new Set();
@@ -521,7 +540,15 @@ function App() {
     return clue.text.map((t: ClueTextPart) => t.plain || t.formatted || '').join(' ')
   }
 
-  const activeCells = activeClueIndex !== null && clues[activeClueIndex] ? new Set(clues[activeClueIndex].cells) : new Set<number>()
+  // Highlight cells for the active clue and any referenced clues
+  let activeCells: Set<number> = new Set();
+  let referencedCells: Set<number> = new Set();
+  if (activeClueIndex !== null && clues[activeClueIndex]) {
+    const clue = clues[activeClueIndex];
+    const referenced = getReferencedCellIndices(clue, clues);
+    activeCells = new Set(clue.cells || []);
+    referencedCells = new Set(referenced.filter(idx => !activeCells.has(idx)));
+  }
 
   const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -565,11 +592,12 @@ function App() {
           {cells.map((cell, i) => {
             const isBlk = isBlack(i)
             const isActive = activeCells.has(i)
+            const isReferenced = referencedCells.has(i)
             const isSelected = focusedIndex === i
             return (
               <div
                 key={i}
-                className={`cell ${isBlk ? 'black' : ''} ${isActive ? 'active' : ''} ${isSelected ? 'selected' : ''}`}
+                className={`cell ${isBlk ? 'black' : ''} ${isActive ? 'active' : ''} ${isReferenced ? 'referenced' : ''} ${isSelected ? 'selected' : ''}`}
                 role="gridcell"
                 onClick={() => {
                   // Use lastSelectedIndex to determine if this is a repeat click
