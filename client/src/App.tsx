@@ -51,9 +51,8 @@ function App() {
   const firstFile = puzzleFilesInitial.length > 0 ? puzzleFilesInitial[0] : null
 
   const [puzzle, setPuzzle] = useState<PuzzleBody | null>(firstFile?.body || null)
-  // Now puzzle is defined, compute circleCells
-  const circleCells = getCircleCells(firstFile?.body || null);
-  console.log(circleCells);
+  // Compute circleCells for the current puzzle, updating when puzzle changes
+  const circleCells = React.useMemo(() => getCircleCells(puzzle), [puzzle]);
 
   const [grid, setGrid] = useState<string[]>(firstFile?.body?.cells ? Array(firstFile.body.cells.length).fill('') : [])
   const [reveal, setReveal] = useState(false)
