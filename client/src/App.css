@@ -171,6 +171,7 @@ button.active.rebus {
   outline: none;
   background: transparent;
   color: inherit;
+  cursor: default;
 }
 
 /* hide blinking caret when the input has the hide-caret class */
