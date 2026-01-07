@@ -36,7 +36,19 @@ Find circled cells using puzzle `.body[0].SVG.children[1].children[i]`
                 },
                 {/* ... */}
               ]
-            }
+            },
+            {
+              "name": "g",
+              "attributes": [/* ... */],
+              "children": [
+                {/* ... */},
+                {
+                  "name": "path", // cells with both labels and circles have a path element
+                  "attributes": [/* ... */]
+                },
+                {/* ... */}
+              ]
+            },
             // ...
           ]
         },
