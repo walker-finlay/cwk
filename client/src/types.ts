@@ -42,3 +42,7 @@ export interface PuzzleBody {
 export interface PuzzleFile {
   body?: PuzzleBody[]
 }
+
+export interface SVGCellComponent {
+  name: string;
+}

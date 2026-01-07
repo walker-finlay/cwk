@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import './App.css'
-import type { PuzzleBody, Clue, ClueList, Cell, ClueTextPart, PuzzleFile } from './types'
+import type { PuzzleBody, Clue, ClueList, Cell, ClueTextPart, PuzzleFile, SVGCellComponent } from './types'
 import { getDay } from 'date-fns'
 
 function App() {
@@ -33,8 +33,9 @@ function App() {
       if (!Array.isArray(cellGroups)) return new Set();
       const circleIndices = new Set<number>();
       cellGroups.forEach((cell, idx) => {
-        const children = (cell as { children?: unknown[] })?.children;
-        if (Array.isArray(children) && children.some((el) => (el as { name?: string; })?.name === 'circle')) {
+        const children: SVGCellComponent[] = (cell as { children: SVGCellComponent[] })?.children;
+        const isCircleElement = (el: SVGCellComponent): boolean => (el)?.name === 'circle' || el?.name === 'path';
+        if (Array.isArray(children) && children.some(isCircleElement)) {
           circleIndices.add(idx);
         }
       });
@@ -44,7 +45,6 @@ function App() {
     }
   }
 
-  // circleCells must be computed after puzzle is defined
   // circleCells must be computed after puzzle is defined
   // Move this below puzzle definition
   // Now puzzle is defined, compute circleCells
