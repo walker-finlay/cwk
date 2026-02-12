@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import './App.css'
 import type { PuzzleBody, Clue, ClueList, Cell, PuzzleFile, Direction } from './types'
-import { getDay } from 'date-fns'
+import { compareDesc, getDay } from 'date-fns'
 import { getCircleCells, getReferencedCellIndices, renderClueText } from './utils'
 
 function App() {
@@ -23,6 +23,7 @@ function App() {
         return body ? { path, name, body } : null
       })
       .filter((e): e is { path: string; name: string; body: PuzzleBody } => !!e)
+      .sort((a, b) => compareDesc(new Date(a.name), new Date(b.name)))
     return entries
   }
 
